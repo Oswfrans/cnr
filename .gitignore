@@ -1,0 +1,8 @@
+/target/
+/.cnr/
+/.axial/
+*.db
+*.sqlite
+*.sqlite3
+*.log
+

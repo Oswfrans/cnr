@@ -1,0 +1,23 @@
+[package]
+name = "cnr-cli"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "cnr"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+axial-core.workspace = true
+axial-projections.workspace = true
+axial-store.workspace = true
+clap.workspace = true
+cnr-core = { path = "../cnr-core" }
+cnr-executor = { path = "../cnr-executor" }
+cnr-manager = { path = "../cnr-manager" }
+cnr-planner = { path = "../cnr-planner" }
+cnr-projections = { path = "../cnr-projections" }
+serde_json.workspace = true
+
