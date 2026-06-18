@@ -1,6 +1,6 @@
-# CNR
+# Crown & Reach
 
-CNR means Crown & Reach: a durable coordination runtime for multiplayer software work in the Thala ecosystem.
+CNR means Crown & Reach: a durable coordination runtime for multiplayer software work
 
 - Crown: sparse, high-capability planning and adjudication.
 - Reach: cheap, parallel execution workers.
