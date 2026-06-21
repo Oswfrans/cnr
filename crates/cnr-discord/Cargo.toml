@@ -5,5 +5,22 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+anyhow.workspace = true
+axial-core.workspace = true
+axial-projections.workspace = true
+axial-store.workspace = true
+clap.workspace = true
 cnr-core = { path = "../cnr-core" }
+cnr-manager = { path = "../cnr-manager" }
+cnr-projections = { path = "../cnr-projections" }
+dotenvy = "0.15"
+serde_json.workspace = true
+serenity = { version = "0.12", default-features = false, features = ["client", "gateway", "model", "rustls_backend"] }
+tokio.workspace = true
 
+[dev-dependencies]
+tempfile.workspace = true
+
+[[bin]]
+name = "cnr-discord"
+path = "src/main.rs"

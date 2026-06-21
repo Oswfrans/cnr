@@ -134,6 +134,55 @@ pub fn claim(
     }
 }
 
+pub fn goal_created_events(
+    title: impl Into<String>,
+    created_by: impl Into<String>,
+) -> (GoalId, Vec<NewEvent>) {
+    let title = title.into();
+    let created_by = created_by.into();
+    let goal_id = GoalId(format!("goal:{}", fresh_id("goal")));
+    let thread_id = ThreadId(format!("thread:{}", fresh_id("thread")));
+    let events = vec![
+        NewEvent::new(
+            StreamType::Goal,
+            human_actor(),
+            Payload::GoalCreated(GoalCreated {
+                id: goal_id.clone(),
+                title: title.clone(),
+                description: None,
+            }),
+        ),
+        NewEvent::new(
+            StreamType::Thread,
+            system_actor(),
+            Payload::ThreadCreated(ThreadCreated {
+                id: thread_id,
+                goal: Some(goal_id.clone()),
+                title: Some(title.clone()),
+            }),
+        ),
+        NewEvent::new(
+            StreamType::Goal,
+            human_actor(),
+            Payload::Message(Message {
+                body: title.clone(),
+                format: MessageFormat::Plain,
+            }),
+        ),
+        NewEvent::new(
+            StreamType::Goal,
+            system_actor(),
+            Payload::ClaimAsserted(claim(
+                goal_id.0.clone(),
+                "task_understood",
+                serde_json::json!({ "goal": title, "created_by": created_by }),
+                vec![],
+            )),
+        ),
+    ];
+    (goal_id, events)
+}
+
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct RunSpec {
     pub goal_id: GoalId,

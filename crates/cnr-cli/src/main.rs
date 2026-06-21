@@ -2,13 +2,10 @@ use std::fs;
 use std::path::PathBuf;
 
 use anyhow::{Context, bail};
-use axial_core::{
-    GoalCreated, GoalId, Message, MessageFormat, NewEvent, Payload, StreamId, StreamType,
-    ThreadCreated, ThreadId, fresh_id,
-};
+use axial_core::{GoalId, NewEvent, Payload, StreamId, StreamType, fresh_id};
 use axial_store::{EventStore, ExpectedVersion, SqliteEventStore};
 use clap::{Parser, Subcommand};
-use cnr_core::{claim, human_actor, normalize_goal, stream_type_for, system_actor};
+use cnr_core::{goal_created_events, normalize_goal, stream_type_for, system_actor};
 
 #[derive(Parser)]
 #[command(
@@ -82,46 +79,7 @@ fn main() -> anyhow::Result<()> {
         }
         Command::Goal { title } => {
             let store = open_store()?;
-            let goal_id = GoalId(format!("goal:{}", fresh_id("goal")));
-            let thread_id = ThreadId(format!("thread:{}", fresh_id("thread")));
-            let events = vec![
-                NewEvent::new(
-                    StreamType::Goal,
-                    human_actor(),
-                    Payload::GoalCreated(GoalCreated {
-                        id: goal_id.clone(),
-                        title: title.clone(),
-                        description: None,
-                    }),
-                ),
-                NewEvent::new(
-                    StreamType::Thread,
-                    system_actor(),
-                    Payload::ThreadCreated(ThreadCreated {
-                        id: thread_id,
-                        goal: Some(goal_id.clone()),
-                        title: Some(title.clone()),
-                    }),
-                ),
-                NewEvent::new(
-                    StreamType::Goal,
-                    human_actor(),
-                    Payload::Message(Message {
-                        body: title.clone(),
-                        format: MessageFormat::Plain,
-                    }),
-                ),
-                NewEvent::new(
-                    StreamType::Goal,
-                    system_actor(),
-                    Payload::ClaimAsserted(claim(
-                        goal_id.0.clone(),
-                        "task_understood",
-                        serde_json::json!({ "goal": title, "created_by": "connor-cli" }),
-                        vec![],
-                    )),
-                ),
-            ];
+            let (goal_id, events) = goal_created_events(title, "connor-cli");
             store.append(
                 StreamId(goal_id.0.clone()),
                 ExpectedVersion::NoStream,
@@ -252,7 +210,8 @@ fn main() -> anyhow::Result<()> {
                 );
             }
             let store = open_store()?;
-            let actions = cnr_manager::manager_cycle(&store, GoalId(normalize_goal(&goal)))?;
+            let actions =
+                cnr_manager::manager_cycle(&store, GoalId(normalize_goal(&goal)), &executor)?;
             println!("actions={} workers={workers}", actions.len());
             for action in actions {
                 println!("{}", serde_json::to_string(&action)?);
@@ -261,13 +220,15 @@ fn main() -> anyhow::Result<()> {
         Command::Loop { goal, cycles } => {
             let store = open_store()?;
             for cycle in 1..=cycles {
-                let actions = cnr_manager::manager_cycle(&store, GoalId(normalize_goal(&goal)))?;
+                let actions =
+                    cnr_manager::manager_cycle(&store, GoalId(normalize_goal(&goal)), "local")?;
                 println!("cycle={cycle} actions={}", actions.len());
             }
         }
         Command::Ultrawork { goal } => {
             let store = open_store()?;
-            let actions = cnr_manager::manager_cycle(&store, GoalId(normalize_goal(&goal)))?;
+            let actions =
+                cnr_manager::manager_cycle(&store, GoalId(normalize_goal(&goal)), "local")?;
             println!("proposed actions:");
             for (idx, action) in actions.iter().enumerate() {
                 println!("{} {}", idx + 1, serde_json::to_string(action)?);

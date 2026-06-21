@@ -23,3 +23,5 @@ cnr ultrawork <goal-id>
 
 The current implementation is intentionally small: events are appended to Axial, projections rebuild from Axial, claims are parsed from worker output, and the manager loop emits structured planning and dispatch events.
 
+See [docs/LOCAL_SETUP.md](docs/LOCAL_SETUP.md) for machine setup, local smoke
+tests, Discord connection inputs, and Modal status.

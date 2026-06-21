@@ -8,9 +8,10 @@ use cnr_planner::{PlannerAction, plan_next};
 pub fn manager_cycle(
     store: &SqliteEventStore,
     goal_id: GoalId,
+    executor: &str,
 ) -> anyhow::Result<Vec<PlannerAction>> {
     cnr_projections::replay(store)?;
-    let output = plan_next(store, &goal_id)?;
+    let output = plan_next(store, &goal_id, executor)?;
     for action in &output.actions {
         match action {
             PlannerAction::CreateTask {
